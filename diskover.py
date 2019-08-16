@@ -38,7 +38,7 @@ import sys
 import json
 
 
-version = '1.5.0.6'
+version = '1.5.0.7-ent'
 __version__ = version
 
 IS_PY3 = sys.version_info >= (3, 0)
@@ -183,6 +183,10 @@ def load_config():
             configsettings['ownersgroups_domainsep'] = config.get('ownersgroups', 'domainsep')
         except ConfigParser.NoOptionError:
             configsettings['ownersgroups_domainsep'] = "\\"
+        try:
+            configsettings['ownersgroups_domainfirst'] = config.get('ownersgroups', 'domainfirst').lower()
+        except ConfigParser.NoOptionError:
+            configsettings['ownersgroups_domainfirst'] = "true"
         try:
             configsettings['ownersgroups_keepdomain'] = config.get('ownersgroups', 'keepdomain').lower()
         except ConfigParser.NoOptionError:
@@ -453,6 +457,30 @@ def load_config():
             configsettings['api_pagesize'] = config.get('crawlapi', 'pagesize')
         except ConfigParser.NoOptionError:
             configsettings['api_pagesize'] = ""
+        try:
+            configsettings['ftp_server'] = config.get('crawlftp', 'server')
+        except ConfigParser.NoOptionError:
+            configsettings['ftp_server'] = "localhost"
+        try:
+            configsettings['ftp_usetls'] = config.get('crawlftp', 'tls').lower()
+        except ConfigParser.NoOptionError:
+            configsettings['ftp_usetls'] = "false"
+        try:
+            configsettings['ftp_usepasv'] = config.get('crawlftp', 'pasv').lower()
+        except ConfigParser.NoOptionError:
+            configsettings['ftp_usepasv'] = "false"
+        try:
+            configsettings['ftp_port'] = int(config.get('crawlftp', 'port'))
+        except ConfigParser.NoOptionError:
+            configsettings['ftp_port'] = 21
+        try:
+            configsettings['ftp_user'] = config.get('crawlftp', 'user')
+        except ConfigParser.NoOptionError:
+            configsettings['ftp_user'] = ""
+        try:
+            configsettings['ftp_password'] = config.get('crawlftp', 'password')
+        except ConfigParser.NoOptionError:
+            configsettings['ftp_password'] = ""
     except ConfigParser.NoSectionError as e:
         print('Missing section from diskover.cfg, check diskover.cfg.sample and copy over, exiting. (%s)' % e)
         sys.exit(1)
@@ -1305,6 +1333,8 @@ def parse_cli_args(indexname):
                         help="Starts up crawl bot continuous scanner to scan for dir changes in index")
     parser.add_argument("--crawlapi", action="store_true",
                         help="Use storage Restful API instead of scandir")
+    parser.add_argument("--crawlftp", action="store_true",
+                        help="Crawl using ftp client instead of scandir")
     parser.add_argument("--storagent", metavar='HOST', nargs='+',
                         help="Use diskover Storage Agent instead of scandir")
     parser.add_argument("--s3", metavar='FILE', nargs='+',
@@ -1553,6 +1583,17 @@ def scandirwalk_worker(threadn, cliargs, logger):
                         nondirs.append(f)
                 del api_dirs[:]
                 del api_nondirs[:]
+            elif cliargs['ftpclient']:
+                root, ftp_dirs, ftp_nondirs = ftp_listdir(path, ftp_conn)
+                path = root
+                for d in ftp_dirs:
+                    if not dir_excluded(d[0], config, cliargs):
+                        dirs.append(d)
+                if not cliargs['dirsonly']:
+                    for f in ftp_nondirs:
+                        nondirs.append(f)
+                del ftp_dirs[:]
+                del ftp_nondirs[:]
             elif stor_agent:
                 # grab dir list from storage agent server
                 dir_list = stor_agent_conn.listdir(path)
@@ -1598,12 +1639,14 @@ def scandirwalk(path, cliargs, logger):
         if cliargs['debug'] or cliargs['verbose']:
             if cliargs['crawlapi']:
                 logger.info("apiwalk: %s (dircount: %s, filecount: %s)" % (root[0], str(len(dirs)), str(len(nondirs))))
+            elif cliargs['crawlftp']:
+                logger.info("ftpwalk: %s (dircount: %s, filecount: %s)" % (root[0], str(len(dirs)), str(len(nondirs))))
             else:
                 logger.info("scandirwalk: %s (dircount: %s, filecount: %s)" % (root, str(len(dirs)), str(len(nondirs))))
         # yield before recursion
         yield root, dirs, nondirs
         # recurse into subdirectories
-        if cliargs['crawlapi']:
+        if cliargs['crawlapi'] or cliargs['crawlftp']:
             for d in dirs:
                 q_paths.put(d[0])
         else:
@@ -1970,6 +2013,9 @@ def pre_crawl_tasks():
         if cliargs['crawlapi']:
             from diskover_crawlapi import api_add_diskspace
             api_add_diskspace(es, cliargs['index'], rootdir_path, api_ses, logger)
+        elif cliargs['crawlftp']:
+            from diskover_crawlftp import ftp_add_diskspace
+            ftp_add_diskspace(es, cliargs['index'], rootdir_path, ftp_conn, logger)
         else:
             add_diskspace(cliargs['index'], logger, rootdir_path)
 
@@ -2126,6 +2172,20 @@ if __name__ == "__main__":
         # check using storage api
         try:
             api_stat(cliargs['rootdir'], api_ses)
+        except ValueError as e:
+            logger.error("Rootdir path not found or not a directory, exiting (%s)" % e)
+            sys.exit(1)
+    elif cliargs['crawlftp']:
+        if cliargs['rootdir'] == '.' or cliargs['rootdir'] == "":
+            logger.error("Rootdir path missing, use -d /rootdir, exiting")
+            sys.exit(1)
+        from diskover_crawlftp import ftp_connection, ftp_stat, ftp_listdir
+        logger.info('Connecting to ftp server at %s port %s... (--crawlftp)' % (config['ftp_server'], config['ftp_port']))
+        ftp_conn = ftp_connection()
+        logger.info('Connected to ftp server')
+        # check using ftp client connection
+        try:
+            ftp_stat(cliargs['rootdir'], ftp_conn)
         except ValueError as e:
             logger.error("Rootdir path not found or not a directory, exiting (%s)" % e)
             sys.exit(1)

@@ -1,4 +1,11 @@
-# Diskover Change Log
+# Diskover Enterprise Change Log
+
+# [1.5.0.7] - 2019-08-15
+### added
+- Diskover Enterprise first release
+- --crawlftp cli arg to crawl ftp servers
+- crawlftp section to diskover.cfg.sample, copy to your diskover.cfg and edit for your env
+- diskover_crawlftp.py
 
 # [1.5.0.6] - 2019-08-07
 ### changed

@@ -165,4 +165,15 @@ maxfilelag = 0.1
 ;user = admin
 ;pass = admin
 ; number of items per page for each directory list request
-;pagesize = 1000
+;pagesize = 
+
+[crawlftp]
+; crawl using ftp client
+;server = ftp.yourserver.com
+;port = 21
+; connect using tls
+;tls = False
+; use passive ftp mode (default False)
+;pasv = False
+;user = ftpuser
+;pass = ftppass
