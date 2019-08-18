@@ -33,7 +33,7 @@ spec:
       containers:
       - args:
         - echo "hello there!" && sleep 60000
-        image: kayosportsau/diskover@sha256:85b772e0183f418762f752759a5953fad449971242b75d467a5f9adc80fa638a
+        image: kayosportsau/diskover@sha256:05ff3ac533f9f5f8cf366c80ffdd0b9ae0633bd100dbb863ab4742e53630cba3
         env:
           - name: REDIS_HOST
             value: redis
