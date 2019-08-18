@@ -17,7 +17,7 @@ while [ "$1" != "" ]; do
                 --ftp-username )        FTP_USR=$2; shift 2;;
                 --ftp-password )        FTP_PWD=$2; shift 2;;
                 --diskover-server )     DISKOVER_CMD="python diskover.py"; shift;;
-                --diskover-worker )     DISKOVER_CMD="python diskover_worker_bot.py"; shift;;
+                --diskover-worker )     DISKOVER_CMD=""; shift;;
                 --ftp )                 USE_FTP=1; shift;;
                 --)                     shift; break;;
                 * )                     DISKOVER_CMD="$DISKOVER_CMD $1"; shift;;
@@ -25,12 +25,16 @@ while [ "$1" != "" ]; do
 done
 
 if ! [ -z "$USE_FTP" ]; then
-    echo "Will mount ftp://$FTP_HOST:$FTP_PORT/$FTP_PATH on $DISKOVER_ROOTDIR"
+    echo "Will NOT ftp://$FTP_HOST:$FTP_PORT/$FTP_PATH on $DISKOVER_ROOTDIR"
     curlftpfs -r -o custom_list="LIST" "ftp://$FTP_USR:$FTP_PWD@$FTP_HOST:$FTP_PORT/$FTP_PATH" "$DISKOVER_ROOTDIR"
     echo "Will execute: $DISKOVER_CMD"
     eval '$DISKOVER_CMD'
     fusermount -u "$DISKOVER_ROOTDIR"
 else
     echo "Will execute: $DISKOVER_CMD"
-    eval '$DISKOVER_CMD'
+    sleep 60000
+    # for i in {1..1000000}; do 
+    #     echo $i
+    #     sleep 60;
+    # done
 fi

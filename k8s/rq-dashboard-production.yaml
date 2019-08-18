@@ -1,0 +1,78 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: rq
+    role: dashboard
+    tier: frontend
+  name: rq-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rq
+      role: dashboard
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        app: rq
+        role: dashboard
+        tier: frontend
+    spec:
+      containers:
+      - image: aleksokanu/rq-dashboard
+        command:
+        - rq-dashboard
+        - --redis-host=redis
+        - --redis-port=6379
+        - -p
+        - "9181"
+        - -b
+        - 0.0.0.0       
+        name: test
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: rq
+    role: dashboard
+    tier: frontend
+  name: rq-dashboard
+spec:
+  ports:
+  - port: 9181
+    protocol: TCP
+    targetPort: 9181
+  selector:
+    app: rq
+    role: dashboard
+    tier: frontend
+  type: NodePort
+status:
+  loadBalancer: {}
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: rq-dashboard
+spec:
+  rules:
+  - host: diskover-rq.kubernetes-production.foxsports.com.au
+    http:
+      paths:
+      - backend:
+          serviceName: rq-dashboard
+          servicePort: 9181
+        path: /
+status:
+  loadBalancer: {}

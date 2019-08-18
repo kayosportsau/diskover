@@ -1583,7 +1583,7 @@ def scandirwalk_worker(threadn, cliargs, logger):
                         nondirs.append(f)
                 del api_dirs[:]
                 del api_nondirs[:]
-            elif cliargs['crawlftp']:
+            elif cliargs['ftpclient']:
                 root, ftp_dirs, ftp_nondirs = ftp_listdir(path, ftp_conn)
                 path = root
                 for d in ftp_dirs:

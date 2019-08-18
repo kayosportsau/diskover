@@ -1,0 +1,150 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    cni.projectcalico.org/podIP: 10.42.3.108/32
+    field.cattle.io/ports: '[[{"containerPort":9999,"dnsName":"diskover-server-k2-main-","name":"server","protocol":"TCP","sourcePort":0}]]'
+  creationTimestamp: "2019-08-18T01:36:53Z"
+  deletionGracePeriodSeconds: 30
+  deletionTimestamp: "2019-08-18T01:40:40Z"
+  generateName: diskover-server-k2-main-
+  labels:
+    app: diskover
+    controller-uid: a82ca331-c158-11e9-a8e4-005056a184e3
+    job-name: diskover-server-k2-main
+    tier: server
+  name: diskover-server-k2-main-lk8kg
+  namespace: diskover
+  ownerReferences:
+  - apiVersion: batch/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: Job
+    name: diskover-server-k2-main
+    uid: a82ca331-c158-11e9-a8e4-005056a184e3
+  resourceVersion: "73899870"
+  selfLink: /api/v1/namespaces/diskover/pods/diskover-server-k2-main-lk8kg
+  uid: a82f419b-c158-11e9-b884-005056a1740b
+spec:
+  containers:
+  - args:
+    - --ftp
+    - --ftp-host
+    - 10.23.19.41
+    - --ftp-username
+    - mxfmovie
+    - -d
+    - /diskover/rootdir/default/
+    - -m
+    - "-172800"
+    - --debug
+    - --index
+    - diskover-k2-main-index-2019-08-18-1136
+    image: kayosportsau/diskover:1.5.0.6
+    imagePullPolicy: Always
+    name: diskover-server-k2-main
+    ports:
+    - containerPort: 9999
+      name: server
+      protocol: TCP
+    resources: {}
+    securityContext:
+      capabilities:
+        add:
+        - SYS_ADMIN
+      privileged: true
+      procMount: Default
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /etc/localtime
+      name: localtime
+    - mountPath: /etc/timezone
+      name: timezone
+    - mountPath: /diskover/diskover.cfg
+      name: diskover-config
+      subPath: diskover.cfg
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: default-token-k8pmn
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: fskubeprod05
+  priority: 0
+  restartPolicy: Never
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - hostPath:
+      path: /etc/localtime
+      type: ""
+    name: localtime
+  - hostPath:
+      path: /etc/timezone
+      type: ""
+    name: timezone
+  - configMap:
+      defaultMode: 420
+      items:
+      - key: diskover.cfg
+        path: diskover.cfg
+      name: diskover-config-k2-main
+    name: diskover-config
+  - name: default-token-k8pmn
+    secret:
+      defaultMode: 420
+      secretName: default-token-k8pmn
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2019-08-18T01:36:53Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2019-08-18T01:40:41Z"
+    message: 'containers with unready status: [diskover-server-k2-main]'
+    reason: ContainersNotReady
+    status: "False"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2019-08-18T01:40:41Z"
+    message: 'containers with unready status: [diskover-server-k2-main]'
+    reason: ContainersNotReady
+    status: "False"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2019-08-18T01:36:53Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: docker://5182c7f4d5afd5707ea3cb2aac302e48370d6db95d6e08899f91acb82f647494
+    image: kayosportsau/diskover:1.5.0.6
+    imageID: docker-pullable://kayosportsau/diskover@sha256:7f1eaf156d9aac8f52226165b225b8e06cd5f26e5490b82db0c0bc72ccd7bb3d
+    lastState: {}
+    name: diskover-server-k2-main
+    ready: false
+    restartCount: 0
+    state:
+      terminated:
+        containerID: docker://5182c7f4d5afd5707ea3cb2aac302e48370d6db95d6e08899f91acb82f647494
+        exitCode: 137
+        finishedAt: "2019-08-18T01:40:40Z"
+        reason: Error
+        startedAt: "2019-08-18T01:36:57Z"
+  hostIP: 10.23.110.39
+  phase: Failed
+  podIP: 10.42.3.108
+  qosClass: BestEffort
+  startTime: "2019-08-18T01:36:53Z"
