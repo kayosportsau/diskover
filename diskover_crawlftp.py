@@ -43,9 +43,10 @@ def ftp_connection():
         else:
             ftp = ftplib.FTP(ftp_server)
         ftp.login(ftp_user, ftp_password)
+        # ftp.set_debuglevel(10)
         if tls:
             ftp.prot_p()
-        ftp.set_pasv(pasv)
+        # ftp.set_pasv(pasv)
     except ftplib.all_errors as ftp_err:
         print("Error connecting to ftp server, exiting (%s)" % ftp_err)
         sys.exit(1)
@@ -55,35 +56,91 @@ def ftp_connection():
     else:
         return ftp
 
+def ftp_cwd(path, ftp):
+    print(f">>> CWD: {path}")
+    curr = ftp.pwd()
+    print("--- CURRENT: ", curr)
+    ftp.cwd(os.path.basename(path))
+    print("--- CURRENT: ", ftp.pwd())
 
 def ftp_stat(path, ftp):
+    print(f"FTP STAT: path:::: {path}" )
     _path = path
     if not path.endswith('/'):
         path = path + '/'
     if not path.startswith('/'):
         path = '/' + path
-    ftp.cwd(path)
-    lines = ftp.retrlines('LIST')
+
+    
+    curr = ftp.pwd()
+    print("--- CURRENT: ", curr)
+
+    # ftp.cwd(path)
+    # curr2 = ftp.pwd()
+    print( f"---- old pwd: curr {curr}" )
+
+    lines = []
+    ftp.retrlines('LIST', lines.append)
+    print( f"----- lines: {len(lines)}" )
+    # ftp.cwd(os.path.basename(_path))
+
     for line in lines:
+        print( f"----line: {line}, {os.path.basename(_path)}" )
         itemlist = line.split(' ')
         itemlist = [x for x in itemlist if x]
-        if itemlist[-1] is os.path.basename(_path):
-            uid = itemlist[2]
-            gid = itemlist[3]
-            ctime = dp.parse(itemlist[5] + ' ' + itemlist[6] + ' ' + itemlist[7]).timestamp()
-            atime = dp.parse(itemlist[5] + ' ' + itemlist[6] + ' ' + itemlist[7]).timestamp()
-            mtime = dp.parse(itemlist[5] + ' ' + itemlist[6] + ' ' + itemlist[7]).timestamp()
-            nlink = itemlist[1]
-            ino = 0
-            size = itemlist[4]
-            mode = 0
-            dev = 0
+        print(">>>>>> ", itemlist)
+        print(f"itemlist[-1] >>>>>> [{itemlist[-1]}]")
+        print(f"os.path.basename(_path) :[{os.path.basename(_path)}]")
+
+        uid = itemlist[2]
+        gid = itemlist[3]
+        ctime = dp.parse(itemlist[5] + ' ' + itemlist[6] + ' ' + itemlist[7]).timestamp()
+        atime = dp.parse(itemlist[5] + ' ' + itemlist[6] + ' ' + itemlist[7]).timestamp()
+        mtime = dp.parse(itemlist[5] + ' ' + itemlist[6] + ' ' + itemlist[7]).timestamp()
+        nlink = itemlist[1]
+        ino = 0
+        size = itemlist[4]
+        mode = 0
+        dev = 0
+
+        if itemlist[-1] == os.path.basename(_path): 
+            print("********FOUND A MATCH!!!!!")
             break
 
-    return mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime
+    return mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime	
+	
+
+
+# def ftp_stat(path, ftp):
+#     _path = path
+#     if not path.endswith('/'):
+#         path = path + '/'
+#     if not path.startswith('/'):
+#         path = '/' + path
+#     ftp.cwd(path)
+#     lines = []
+#     lines = ftp.retrlines('LIST', lines.append)
+#     for line in lines:
+#         itemlist = line.split(' ')
+#         itemlist = [x for x in itemlist if x]
+#         if itemlist[-1] is os.path.basename(_path):
+#             uid = itemlist[2]
+#             gid = itemlist[3]
+#             ctime = dp.parse(itemlist[5] + ' ' + itemlist[6] + ' ' + itemlist[7]).timestamp()
+#             atime = dp.parse(itemlist[5] + ' ' + itemlist[6] + ' ' + itemlist[7]).timestamp()
+#             mtime = dp.parse(itemlist[5] + ' ' + itemlist[6] + ' ' + itemlist[7]).timestamp()
+#             nlink = itemlist[1]
+#             ino = 0
+#             size = itemlist[4]
+#             mode = 0
+#             dev = 0
+#             break
+
+#     return mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime
 
 
 def ftp_listdir(path, ftp):
+    print(f"\n\n*******************Got Request to list: {path}")
     dirs = []
     nondirs = []
 
@@ -92,10 +149,15 @@ def ftp_listdir(path, ftp):
     root = (path, path_metadata)
 
     # get directory list
-    lines = ftp.retrlines('LIST')
+    lines = []
+    ftp.retrlines('LIST', lines.append)
     for line in lines:
         itemlist = line.split(' ')
         itemlist = [x for x in itemlist if x]
+
+        for itm in itemlist:
+            print("----: ", itm)
+
         if itemlist[0].startswith('d') and itemlist[0] not in ('.', '..'):
             dirs.append(
                 (

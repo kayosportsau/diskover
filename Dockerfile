@@ -10,7 +10,7 @@ WORKDIR ${DISKOVER_WORKDIR}
 COPY ./ ${DISKOVER_WORKDIR}/
 
 RUN apt-get update && \
-    apt-get install procps vim --yes && \
+    apt-get install procps vim less --yes && \
     apt-get clean
     
 RUN mkdir ${DISKOVER_ROOTDIR} && \

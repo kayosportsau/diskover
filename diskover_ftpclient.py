@@ -13,26 +13,41 @@ LICENSE for the full license text.
 import os
 import ftplib
 from optparse import OptionParser
-
+import dateutil.parser as dp
 
 
 def ftp_stat(path, ftp):
+    print(f"FTP STAT: path:::: {path}" )
     _path = path
     if not path.endswith('/'):
         path = path + '/'
     if not path.startswith('/'):
         path = '/' + path
 
-    print( "--cwd path: ", path )	
-    ftp.cwd(path)
-    lines = ftp.retrlines('LIST')
-	
+    
+    curr = ftp.pwd()
+    print("--- CURRENT: ", curr)
+
+    # 
+    # curr2 = ftp.pwd()
+    print( f"---- old pwd: curr {curr}" )
+
+    lines = []
+    ftp.retrlines('LIST', lines.append)
+    print( f"----- lines: {len(lines)}" )
+
+    ftp.cwd(os.path.basename(_path))
 
     for line in lines:
         print( f"----line: {line}, {os.path.basename(_path)}" )
         itemlist = line.split(' ')
         itemlist = [x for x in itemlist if x]
-        if itemlist[-1] is os.path.basename(_path):
+        print(">>>>>> ", itemlist)
+        print(f"itemlist[-1] >>>>>> [{itemlist[-1]}]")
+        print(f"os.path.basename(_path) :[{os.path.basename(_path)}]")
+
+        if itemlist[-1] == os.path.basename(_path):
+            print("********FOUND A MATCH!!!!!")
             uid = itemlist[2]
             gid = itemlist[3]
             ctime = dp.parse(itemlist[5] + ' ' + itemlist[6] + ' ' + itemlist[7]).timestamp()
@@ -58,11 +73,11 @@ __version__ = version
 
 parser = OptionParser(version="diskover ftp client v % s" % version)
 parser.add_option("-s", "--server", metavar="HOST",
-					help="FTP server hostname/ip")
+                    help="FTP server hostname/ip")
 parser.add_option("-u", "--user", metavar="USERNAME",
-					help="Username")
+                    help="Username")
 parser.add_option("-p", "--password", metavar="PASSWORD",
-					help="Password")              
+                    help="Password")              
 (options, args) = parser.parse_args()
 options = vars(options)
 
@@ -71,6 +86,7 @@ USER =  options['user']
 PASSWORD = options['password']
 
 ftp = ftplib.FTP(HOST)
+ftp.set_debuglevel(9)
 ftp.login(USER, PASSWORD)
 
 data = []
@@ -82,7 +98,9 @@ print("---- : ", len(data))
 for line in data:
     print("-", line)
 
-# ftp_stat("default", ftp)
+ftpStat = ftp_stat("/MXF/default", ftp)
+
+print("-----: ", ftpStat)
 
 ftp.quit()
 

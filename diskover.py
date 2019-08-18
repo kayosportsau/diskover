@@ -1554,6 +1554,7 @@ def calc_dir_sizes(cliargs, logger, path=None):
 
 
 def scandirwalk_worker(threadn, cliargs, logger):
+    logger.info('Starting worker %s' % (threadn))
     dirs = []
     nondirs = []
     # check if we are using storage agent and make connection
@@ -2179,7 +2180,7 @@ if __name__ == "__main__":
         if cliargs['rootdir'] == '.' or cliargs['rootdir'] == "":
             logger.error("Rootdir path missing, use -d /rootdir, exiting")
             sys.exit(1)
-        from diskover_crawlftp import ftp_connection, ftp_stat, ftp_listdir
+        from diskover_crawlftp import ftp_connection, ftp_stat, ftp_listdir, ftp_cwd
         logger.info('Connecting to ftp server at %s port %s... (--crawlftp)' % (config['ftp_server'], config['ftp_port']))
         ftp_conn = ftp_connection()
         logger.info('Connected to ftp server')
@@ -2187,7 +2188,9 @@ if __name__ == "__main__":
         try:
             logger.info(f"Starting ftp_stat: {cliargs['rootdir']}")
             ftpStat = ftp_stat(cliargs['rootdir'], ftp_conn)
+            ftp_cwd(cliargs['rootdir'], ftp_conn)
             logger.info(f"done ftpStat: {ftpStat}")
+
         except ValueError as e:
             logger.error("Rootdir path not found or not a directory, exiting (%s)" % e)
             sys.exit(1)
