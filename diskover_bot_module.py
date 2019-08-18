@@ -412,7 +412,7 @@ def get_owner_group_names(uid, gid, cliargs):
     # not in cache
     else:
         # check if we should just get uid or try to get owner name
-        if config['ownersgroups_uidgidonly'] == "true" or cliargs['crawlapi']:
+        if config['ownersgroups_uidgidonly'] == "true" or cliargs['crawlapi'] or cliargs['crawlftp']:
             owner = uid
         else:
             try:
@@ -443,7 +443,7 @@ def get_owner_group_names(uid, gid, cliargs):
     # not in cache
     else:
         # check if we should just get gid or try to get group name
-        if config['ownersgroups_uidgidonly'] == "true" or cliargs['crawlapi']:
+        if config['ownersgroups_uidgidonly'] == "true" or cliargs['crawlapi'] or cliargs['crawlftp']:
             group = gid
         else:
             try:
@@ -900,7 +900,7 @@ def scrape_tree_meta(paths, cliargs, reindex_dict):
         if path_count == 1:
             if type(root) is tuple:
                 statsembeded = True
-        # check if stats embeded in data from diskover tree walk client or crawlapi
+        # check if stats embeded in data from diskover tree walk client, crawlapi or crawlftp
         if statsembeded:
             root_path = root[0]
             dmeta = get_dir_meta(worker, root, cliargs, reindex_dict, statsembeded=True)
