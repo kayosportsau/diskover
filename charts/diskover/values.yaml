@@ -3,8 +3,8 @@
 # Declare variables to be passed into your templates.
 replicaCount: 1
 image:
-  repository: draft
-  tag: dev
+  repository: kayosportsau/fsa-streamotion/diskover
+  tag: 3.0.8
   pullPolicy: Always
 
 elasticsearch:
