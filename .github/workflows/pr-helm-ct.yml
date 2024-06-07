@@ -1,0 +1,16 @@
+name: PR Check - Run the Helm ct tool on the charts
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+    branches: [master]
+
+jobs:
+  pr-helm-ct:
+    runs-on: gitops-prod-base
+    steps:
+      - name: Run the Helm Chart Testing tool
+        uses: fsa-streamotion/private-github-actions/actions/helm-chart-testing@master
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          image-pull-from-ecr: true

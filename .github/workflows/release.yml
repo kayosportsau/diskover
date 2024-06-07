@@ -1,0 +1,52 @@
+name: Merge from PR
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  close_job:
+    if: github.event.pull_request.merged == false
+    runs-on: gitops-prod-base
+    steps:
+      - run: |
+          echo "PR #${{ github.event.number }} has been closed without being merged"
+  merge_pr:
+    if: github.event.pull_request.merged == true
+    name: Master Build
+    runs-on: gitops-prod-base
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Generate Version
+        id: generate_version
+        uses: fsa-streamotion/private-github-actions/actions/pr-master/pr-master-versioning@master
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          is_mvn_versioning: false
+
+      - name: Release to Artifactory
+        shell: bash
+        id: release-artifactory
+        working-directory: charts/orkes-conductor-standalone
+        env:
+          GIT_REPO: ${{ env.GIT_REPO }}
+          CHARTMUSEUM_CREDS: ${{ secrets.FSA_CLOUD_ARTIFACTORY_CREDS }}
+          CHART_REPOSITORY: "https://artifactory.cluster.foxsports-gitops-prod.com.au/artifactory/helm"
+          VERSION: ${{ env.VERSION }}
+        run: |
+          export RELEASE_VERSION=$VERSION && make release
+
+      - name: Create Tag
+        id: create_tag
+        uses: fsa-streamotion/private-github-actions/actions/pr-master/pr-master-make-tags@master
+        with:
+          TAG_PREFIX: 'v'
+
+      - name: Create Release
+        id: create_release
+        uses: fsa-streamotion/private-github-actions/actions/pr-master/pr-master-create-release@master
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          TAG_PREFIX: 'v'

@@ -1,0 +1,15 @@
+name: PR Check - lint the PR itself
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+    branches: [master]
+
+jobs:
+  pr-lint:
+    runs-on: gitops-prod-base
+    steps:
+      - name: Lint the PR itself
+        uses: fsa-streamotion/private-github-actions/actions/environment-sceptre/umbrella-pr-lint@master
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
