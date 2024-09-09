@@ -48,7 +48,7 @@ def api_connection():
         ses.auth = (api_user, api_password)
     # check connection to api
     try:
-        resp = ses.get(api_url, verify=False)
+        resp = ses.get(api_url)
         resp.raise_for_status()
     except HTTPError as http_err:
         print("Error connecting to storage api, exiting (%s)" % http_err)
